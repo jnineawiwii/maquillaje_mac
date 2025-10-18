@@ -7,17 +7,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --site-header-height: 72px; } /* Ajusta a la altura real de tu header */
-        /* Fija la barra superior y sitúala por encima del contenido */
-         /* Cabecera fija, fondo oscuro y texto blanco */
+    :root { --site-header-height: 72px; }
+    /* Si quieres DESACTIVAR la cabecera fija, usa position: static y elimina el padding-top */
     .site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      position: static; /* antes: fixed */
+      top: auto;
+      left: auto;
+      right: auto;
       height: var(--site-header-height);
       z-index: 1050;
-      background: linear-gradient(90deg,#040210 0%, #0b0212 100%); /* tono negro / morado muy oscuro */
+      background: linear-gradient(90deg,#040210 0%, #0b0212 100%);
       color: #ffffff;
       display: flex;
       align-items: center;
@@ -25,8 +24,9 @@
       gap: 18px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.25);
     }
-        /* Dejar espacio para la cabecera fija */
-        body { padding-top: var(--site-header-height); }
+
+    /* Quitar el espacio reservado para header fijo */
+    body { padding-top: 0; } /* antes: var(--site-header-height) */
 
         /* Estilos para el buscador y navbar */
         .video-container {
@@ -196,10 +196,50 @@
         .flash-warning {
             background-color: #ffc107;
         }
+
+        /* Visually hidden but available to screen readers */
+    .sr-only {
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
+    }
+    /* visible when focused (skip link) */
+    .sr-only-focusable:active,
+    .sr-only-focusable:focus {
+      position: static !important;
+      width: auto; height: auto;
+      margin: 0; overflow: visible; clip: auto;
+      white-space: normal;
+    }
+
+    /* Mejorar visibilidad del foco */
+    :focus { outline: 3px solid #7b1fa2; outline-offset: 2px; }
+
+    /* Botón toggle para lector de pantalla (pequeño y visible) */
+    .sr-toggle {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight:600;
+    }
+    .sr-toggle.active {
+      background: #7b1fa2;
+      box-shadow: 0 6px 18px rgba(123,31,162,0.18);
+    }
     </style>
 </head>
+
 <body>
-    <header>
+  <!-- Skip link para saltar al contenido principal -->
+  <a class="sr-only sr-only-focusable" href="#main-content">Saltar al contenido</a>
+
+  <!-- Cabecera existente -->
+  <header>
         <nav class="site-header">
             <div class="nav-brand">
                 <a href="{{ url_for('index') }}" class="mac-style">MAC Style</a>
@@ -234,11 +274,20 @@
                     <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
                     <li><a href="{{ url_for('register') }}">Registrarse</a></li>
                 {% endif %}
+
+                <!-- BOTÓN: activar/desactivar lector de pantalla (añádelo aquí) -->
+    <li>
+      <button id="srToggleBtn" class="sr-toggle" aria-pressed="false" aria-label="Activar lector de pantalla">Lector</button>
+    </li>
             </ul>
         </nav>
     </header>
 
-    <main>
+    <!-- Live region para anuncios al lector de pantalla -->
+    <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Asegúrate que tu main tenga id y sea focable -->
+    <main id="main-content" tabindex="-1">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <div class="flash-messages">
@@ -258,15 +307,84 @@
     </footer>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script>
-        // Si el usuario no está autenticado, fuerza recarga en páginas privadas
-        {% if not current_user.is_authenticated %}
-        if (window.location.pathname.startsWith('/cart') ||
-            window.location.pathname.startsWith('/checkout') ||
-            window.location.pathname.startsWith('/admin')) {
-            window.location.href = "{{ url_for('index') }}";
-        }
-        {% endif %}
-    </script>
+  <script>
+    // GLOBAL: estado accesibilidad disponible para el resto del script
+    window.srEnabled = false;
+    window.srSpeechEnabled = false; // fallback por síntesis de voz
+
+    // Funcion para anunciar mensajes a lectores de pantalla y, opcionalmente, por síntesis de voz
+    function srAnnounce(message, politeness='polite') {
+      const el = document.getElementById('sr-announcer');
+      if(el){
+        el.setAttribute('aria-live', politeness);
+        el.textContent = '';
+        // pequeño retraso para forzar relectura por algunos screen readers
+        setTimeout(()=> { el.textContent = message; }, 100);
+      }
+      // FALLBACK: usar SpeechSynthesis si el usuario activó el modo voz (útil para demo sin lector)
+      if(window.srSpeechEnabled && 'speechSynthesis' in window && message){
+        try {
+          // cancelar en curso y reproducir
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(message);
+          u.lang = 'es-ES';
+          u.rate = 1;
+          u.pitch = 1;
+          window.speechSynthesis.speak(u);
+        } catch(e){ console.warn('SpeechSynthesis error', e); }
+      }
+    }
+
+    // Si el usuario no está autenticado, fuerza recarga en páginas privadas
+    {% if not current_user.is_authenticated %}
+    if (window.location.pathname.startsWith('/cart') ||
+        window.location.pathname.startsWith('/checkout') ||
+        window.location.pathname.startsWith('/admin')) {
+        window.location.href = "{{ url_for('index') }}";
+    }
+    {% endif %}
+
+    // Toggle y delegación para anuncios (agrega al final del script)
+  (function(){
+    const toggle = document.getElementById('srToggleBtn');
+    // inicializar según global (por si viene de otro script)
+    window.srEnabled = window.srEnabled || false;
+    window.srSpeechEnabled = window.srSpeechEnabled || false;
+
+    function setToggleState(enabled){
+      window.srEnabled = !!enabled;
+      if(!toggle) return;
+      toggle.classList.toggle('active', window.srEnabled);
+      toggle.setAttribute('aria-pressed', window.srEnabled ? 'true' : 'false');
+      // activar síntesis de voz como fallback para demo (si el usuario lo quiere)
+      // puedes quitar la línea siguiente si no quieres síntesis automática
+      window.srSpeechEnabled = window.srEnabled;
+      srAnnounce(window.srEnabled ? 'Lector de pantalla activado' : 'Lector de pantalla desactivado', 'polite');
+      if(window.srEnabled){
+        const main = document.getElementById('main-content');
+        if(main){ main.focus(); }
+      }
+    }
+
+    if(toggle){
+      toggle.addEventListener('click', (e)=>{
+        e.preventDefault();
+        setToggleState(!window.srEnabled);
+      });
+    }
+
+    // Delegación: si haces click en un elemento con data-sr-message se anunciará cuando srEnabled = true
+    document.body.addEventListener('click', (e)=>{
+      if(!window.srEnabled) return;
+      const el = e.target.closest && e.target.closest('[data-sr-message]');
+      if(el){
+        const msg = el.getAttribute('data-sr-message');
+        if(msg) srAnnounce(msg, 'polite');
+      }
+    });
+
+    // También puedes anunciar mensajes desde código servidor/JS llamando srAnnounce('Texto')
+  })();
+  </script>
 </body>
 </html>
