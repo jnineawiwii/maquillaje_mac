@@ -976,5 +976,15 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
+@app.route('/guide')
+def guide():
+    """
+    Página de guía de lectura / documentación básica dentro de la app.
+    Cambia el contenido de la plantilla según necesites.
+    """
+    guide_title = "Guía de lectura - Cómo usar la tienda"
+    # puedes pasar más contexto si necesitas
+    return render_template('guide.html', title=guide_title)
+
 if __name__ == '__main__':
     app.run(port=5001, debug=True)
