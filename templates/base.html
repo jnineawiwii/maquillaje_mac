@@ -1,390 +1,161 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAC Style Makeup Store</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-    :root { --site-header-height: 72px; }
-    /* Si quieres DESACTIVAR la cabecera fija, usa position: static y elimina el padding-top */
-    .site-header {
-      position: static; /* antes: fixed */
-      top: auto;
-      left: auto;
-      right: auto;
-      height: var(--site-header-height);
-      z-index: 1050;
-      background: linear-gradient(90deg,#040210 0%, #0b0212 100%);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      padding: 8px 20px;
-      gap: 18px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-    }
-
-    /* Quitar el espacio reservado para header fijo */
-    body { padding-top: 0; } /* antes: var(--site-header-height) */
-
-        /* Estilos para el buscador y navbar */
-        .video-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 20px;
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        }
-
-        .video-overlay {
-            padding: 10px;
-        }
-
-        .video-overlay h2 {
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-
-        .video-overlay p {
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-
-        .video-overlay a {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-
-        .search-container {
-            flex: 1;
-            max-width: 400px;
-            margin: 0 20px;
-        }
-
-        .search-form {
-            display: flex;
-            align-items: center;
-        }
-
-        .search-form input {
-            padding: 8px 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px 0 0 4px;
-            width: 100%;
-            font-size: 14px;
-        }
-
-        .search-form button {
-            padding: 8px 15px;
-            background: #0f0f0f;
-            color: white;
-            border: none;
-            border-radius: 0 4px 4px 0;
-            cursor: pointer;
-        }
-
-        .search-form button:hover {
-            background: #0e0e0e;
-        }
-
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: linear-gradient(to right, #080808, #0a031d);
-            color: white;
-        }
-
-        .nav-brand a {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-menu a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .nav-auth {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .nav-auth a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .admin-section a {
-            color: pink !important;
-            font-weight: bold;
-        }
-
-        /* Estilos responsivos */
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .search-container {
-                margin: 10px 0;
-                max-width: 100%;
-            }
-            
-            .nav-menu {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
-            }
-            
-            .nav-auth {
-                justify-content: center;
-            }
-        }
-
-        .flash-messages {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            width: auto;
-            max-width: 300px;
-        }
-
-        .flash-message {
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            color: white;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .flash-message i {
-            margin-right: 8px;
-        }
-
-        .flash-success {
-            background-color: #28a745;
-        }
-
-        .flash-error {
-            background-color: #dc3545;
-        }
-
-        .flash-info {
-            background-color: #007bff;
-        }
-
-        .flash-warning {
-            background-color: #ffc107;
-        }
-
-        /* Visually hidden but available to screen readers */
-    .sr-only {
-      position: absolute !important;
-      width: 1px; height: 1px;
-      padding: 0; margin: -1px;
-      overflow: hidden; clip: rect(0,0,0,0);
-      white-space: nowrap; border: 0;
-    }
-    /* visible when focused (skip link) */
-    .sr-only-focusable:active,
-    .sr-only-focusable:focus {
-      position: static !important;
-      width: auto; height: auto;
-      margin: 0; overflow: visible; clip: auto;
-      white-space: normal;
-    }
-
-    /* Mejorar visibilidad del foco */
-    :focus { outline: 3px solid #7b1fa2; outline-offset: 2px; }
-
-    /* Botón toggle para lector de pantalla (pequeño y visible) */
-    .sr-toggle {
-      background: transparent;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.12);
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight:600;
-    }
-    .sr-toggle.active {
-      background: #7b1fa2;
-      box-shadow: 0 6px 18px rgba(123,31,162,0.18);
-    }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAC Style Makeup Store</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-  <!-- Skip link para saltar al contenido principal -->
-  <a class="sr-only sr-only-focusable" href="#main-content">Saltar al contenido</a>
 
-  <!-- Cabecera existente -->
-  <header>
-        <nav class="site-header">
-            <div class="nav-brand">
-                <a href="{{ url_for('index') }}" class="mac-style">MAC Style</a>
-            </div>
+<!-- Skip link -->
+<a class="sr-only sr-only-focusable" href="#main-content">Saltar al contenido</a>
 
-            <!-- Buscador -->
-            <div class="search-container">
-                <form action="{{ url_for('search') }}" method="GET" class="search-form">
-                    <input type="text" name="q" placeholder="Buscar productos..." value="{{ request.args.get('q', '') }}">
-                    <button type="submit"><i class="fas fa-search"></i></button>
-                </form>
-            </div>
+<!-- Cabecera -->
+<header>
+<nav class="navbar">
+    <div class="nav-brand">
+        <a href="{{ url_for('index') }}" class="mac-style">MAC Style</a>
+    </div>
 
-            <ul class="nav-menu">
-                {% if current_user.is_authenticated and current_user.is_admin() %}
-                    <li class="admin-section">
-                        <a href="{{ url_for('admin_dashboard') }}">Administración</a>
-                    </li>
-                {% endif %}
+    <!-- Buscador -->
+    <div class="search-container">
+        <form action="{{ url_for('search') }}" method="GET" class="search-form">
+            <input type="text" name="q" placeholder="Buscar productos..." value="{{ request.args.get('q', '') }}">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
 
-                <li><a href="{{ url_for('products') }}">Productos</a></li>
-                <li><a href="{{ url_for('products', category='labios') }}">Labios</a></li>
-                <li><a href="{{ url_for('products', category='ojos') }}">Ojos</a></li>
-                <li><a href="{{ url_for('products', category='rostro') }}">Rostro</a></li>
-                <li><a href="{{ url_for('guide') }}">Guía</a></li>
+    <!-- Menú principal -->
+    <ul class="nav-menu">
+        {% if current_user.is_authenticated and current_user.is_admin() %}
+            <li class="admin-section"><a href="{{ url_for('admin_dashboard') }}">Administración</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('products') }}">Productos</a></li>
+        <li><a href="{{ url_for('products', category='labios') }}">Labios</a></li>
+        <li><a href="{{ url_for('products', category='ojos') }}">Ojos</a></li>
+        <li><a href="{{ url_for('products', category='rostro') }}">Rostro</a></li>
 
+        {% if current_user.is_authenticated %}
+            <li><span>Hola, {{ current_user.username }}</span></li>
+            <li><a href="{{ url_for('cart') }}" class="cart-icon">🛒<span class="cart-count">0</span></a></li>
+        {% endif %}
+
+        <!-- Dropdown Menu: SOLO hasta la derecha, con las 3 rayitas -->
+        <li class="dropdown">
+            <button class="dropdown-btn"><i class="fas fa-bars"></i></button>
+            <div class="dropdown-content">
+                <!-- 1. Guía de usuario -->
+                <a href="{{ url_for('guide') }}">Guía de usuario</a>
+
+                <!-- 2. Lector -->
+                <button id="srToggleBtnMenu" class="sr-toggle">Lector</button>
+
+                <!-- 3. Modo oscuro/claro -->
+                <button id="themeToggleBtnMenu" class="theme-btn"></button>
+
+                <!-- 4. Cerrar sesión o Iniciar/Registrarse -->
                 {% if current_user.is_authenticated %}
-                    <li><span style="color: white;">Hola, {{ current_user.username }}</span></li>
-                    <li><a href="{{ url_for('cart') }}">Carrito</a></li>
-                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
-                    <li><a href="{{ url_for('register') }}">Registrarse</a></li>
+                    <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                    <a href="{{ url_for('register') }}">Registrarse</a>
                 {% endif %}
-
-                <!-- BOTÓN: activar/desactivar lector de pantalla (añádelo aquí) -->
-    <li>
-      <button id="srToggleBtn" class="sr-toggle" aria-pressed="false" aria-label="Activar lector de pantalla">Lector</button>
-    </li>
-            </ul>
-        </nav>
-    </header>
-
-    <!-- Live region para anuncios al lector de pantalla -->
-    <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
-    <!-- Asegúrate que tu main tenga id y sea focable -->
-    <main id="main-content" tabindex="-1">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div class="flash-messages">
-              {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">
-                  <i class="fas fa-exclamation-circle"></i> {{ message }}
-                </div>
-              {% endfor %}
             </div>
-          {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
-    </main>
+        </li>
+    </ul>
+</nav>
+</header>
 
-    <footer class="site-footer">
-        <p>© 2023 MAC Style Makeup Store. Proyecto estudiantil sin derechos de autor.</p>
-    </footer>
+<!-- Live region para lector de pantalla -->
+<div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-  <script>
-    // GLOBAL: estado accesibilidad disponible para el resto del script
-    window.srEnabled = false;
-    window.srSpeechEnabled = false; // fallback por síntesis de voz
+<!-- Main -->
+<main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+</main>
 
-    // Funcion para anunciar mensajes a lectores de pantalla y, opcionalmente, por síntesis de voz
-    function srAnnounce(message, politeness='polite') {
-      const el = document.getElementById('sr-announcer');
-      if(el){
-        el.setAttribute('aria-live', politeness);
-        el.textContent = '';
-        // pequeño retraso para forzar relectura por algunos screen readers
-        setTimeout(()=> { el.textContent = message; }, 100);
-      }
-      // FALLBACK: usar SpeechSynthesis si el usuario activó el modo voz (útil para demo sin lector)
-      if(window.srSpeechEnabled && 'speechSynthesis' in window && message){
-        try {
-          // cancelar en curso y reproducir
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(message);
-          u.lang = 'es-ES';
-          u.rate = 1;
-          u.pitch = 1;
-          window.speechSynthesis.speak(u);
-        } catch(e){ console.warn('SpeechSynthesis error', e); }
-      }
-    }
+<footer class="site-footer">
+    <p>© 2023 MAC Style Makeup Store. Proyecto estudiantil sin derechos de autor.</p>
+</footer>
 
-    // Si el usuario no está autenticado, fuerza recarga en páginas privadas
-    {% if not current_user.is_authenticated %}
-    if (window.location.pathname.startsWith('/cart') ||
-        window.location.pathname.startsWith('/checkout') ||
-        window.location.pathname.startsWith('/admin')) {
-        window.location.href = "{{ url_for('index') }}";
-    }
-    {% endif %}
+<!-- Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ===== Dropdown usuario =====
+    const dropdown = document.querySelector('.dropdown');
+    const dropdownBtn = dropdown.querySelector('.dropdown-btn');
 
-    // Toggle y delegación para anuncios (agrega al final del script)
-  (function(){
-    const toggle = document.getElementById('srToggleBtn');
-    // inicializar según global (por si viene de otro script)
-    window.srEnabled = window.srEnabled || false;
-    window.srSpeechEnabled = window.srSpeechEnabled || false;
-
-    function setToggleState(enabled){
-      window.srEnabled = !!enabled;
-      if(!toggle) return;
-      toggle.classList.toggle('active', window.srEnabled);
-      toggle.setAttribute('aria-pressed', window.srEnabled ? 'true' : 'false');
-      // activar síntesis de voz como fallback para demo (si el usuario lo quiere)
-      // puedes quitar la línea siguiente si no quieres síntesis automática
-      window.srSpeechEnabled = window.srEnabled;
-      srAnnounce(window.srEnabled ? 'Lector de pantalla activado' : 'Lector de pantalla desactivado', 'polite');
-      if(window.srEnabled){
-        const main = document.getElementById('main-content');
-        if(main){ main.focus(); }
-      }
-    }
-
-    if(toggle){
-      toggle.addEventListener('click', (e)=>{
-        e.preventDefault();
-        setToggleState(!window.srEnabled);
-      });
-    }
-
-    // Delegación: si haces click en un elemento con data-sr-message se anunciará cuando srEnabled = true
-    document.body.addEventListener('click', (e)=>{
-      if(!window.srEnabled) return;
-      const el = e.target.closest && e.target.closest('[data-sr-message]');
-      if(el){
-        const msg = el.getAttribute('data-sr-message');
-        if(msg) srAnnounce(msg, 'polite');
-      }
+    dropdownBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
     });
 
-    // También puedes anunciar mensajes desde código servidor/JS llamando srAnnounce('Texto')
-  })();
-  </script>
+    document.addEventListener('click', e => {
+        if(!dropdown.contains(e.target)){
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // ===== Toggle modo oscuro/sol con texto =====
+    const themeBtnMenu = document.getElementById('themeToggleBtnMenu');
+
+    function updateThemeBtnText() {
+        themeBtnMenu.textContent = document.body.classList.contains('dark-mode') ?
+            'Cambiar a modo claro' :
+            'Cambiar a modo oscuro';
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark':'light');
+        updateThemeBtnText();
+    }
+
+    // Inicializar texto según localStorage
+    if(localStorage.getItem('theme') === 'dark'){
+        document.body.classList.add('dark-mode');
+    }
+    updateThemeBtnText();
+    themeBtnMenu.addEventListener('click', toggleTheme);
+
+    // ===== Lector de pantalla =====
+    let srEnabled = false;
+    let srSpeechEnabled = false;
+    const srToggleMenu = document.getElementById('srToggleBtnMenu');
+    function srAnnounce(msg, politeness='polite'){
+        const el = document.getElementById('sr-announcer');
+        if(el){ el.setAttribute('aria-live', politeness); el.textContent = ''; setTimeout(()=>el.textContent=msg,100);}
+        if(srSpeechEnabled && 'speechSynthesis' in window && msg){
+            try{window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(msg); u.lang='es-ES'; window.speechSynthesis.speak(u);}catch(e){console.warn(e);}
+        }
+    }
+    function toggleSR(){
+        srEnabled = !srEnabled;
+        srSpeechEnabled = srEnabled;
+        srToggleMenu.classList.toggle('active', srEnabled);
+        srToggleMenu.setAttribute('aria-pressed', srEnabled?'true':'false');
+        srAnnounce(srEnabled ? 'Lector activado':'Lector desactivado');
+    }
+    srToggleMenu.addEventListener('click', toggleSR);
+
+    // ===== Carrito efecto bump =====
+    const cartCount = document.querySelector('.cart-count');
+    function bumpCart(){
+        cartCount.classList.add('bump');
+        setTimeout(()=>cartCount.classList.remove('bump'),200);
+    }
+
+    // Simulación: agregar producto
+    document.querySelectorAll('.btn-add').forEach(btn=>{
+        btn.addEventListener('click', () => {
+            let count = parseInt(cartCount.textContent);
+            cartCount.textContent = count + 1;
+            bumpCart();
+        });
+    });
+});
+</script>
 </body>
 </html>
