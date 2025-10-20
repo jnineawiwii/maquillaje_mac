@@ -1,0 +1,648 @@
+/* ===== ESTILOS GENERALES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+body {
+    
+    /* Nueva Tipografía Principal */
+    font-family: 'Comfortaa', sans-serif;
+    line-height: 1.6;
+    color: #0e0d0d;
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    /* ✅ AGREGAMOS EL FILTRO Y LAS TRANSICIONES DE COLOR/FONDO AQUÍ */
+    filter: contrast(1); /* Valor inicial: 100% de contraste (1.0) */
+    transition: 
+        filter 0.3s ease,              /* Transición suave para el deslizador */
+        background-color 0.4s ease,    /* Transición para el modo oscuro */
+        color 0.4s ease,               /* Transición para el color del texto */
+        border-color 0.4s ease;
+}
+
+main {
+    flex: 1;
+}
+
+/* ===== NAVEGACIÓN ===== */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    background-color: #000;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-brand a {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-menu a {
+    color: white;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.nav-menu a:hover {
+    color: pink;
+}
+
+.nav-menu a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: pink;
+    left: 0;
+    bottom: -5px;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-menu a:hover::after {
+    transform: scaleX(1);
+}
+
+.nav-auth {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-auth a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.nav-auth a:hover {
+    background-color: rgba(12, 12, 12, 0.1);
+}
+
+.nav-auth span {
+    color: white;
+    margin-right: 1rem;
+}
+
+.nav-menu span {
+    color: white;
+    margin-left: 15px;
+}
+
+/* ===== DROPDOWN CORREGIDO ===== */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    z-index: 1000;
+}
+
+.dropdown-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.dropdown-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dropdown-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #111;
+    min-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    z-index: 1000;
+}
+
+.dropdown.show .dropdown-content {
+    max-height: 500px;
+    opacity: 1;
+}
+
+.dropdown-content a,
+.dropdown-content button {
+    padding: 12px 16px;
+    text-decoration: none;
+    color: white;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.dropdown-content a:hover,
+.dropdown-content button:hover {
+    background-color: #333;
+    transform: scale(1.05);
+}
+
+/* ===== BUSCADOR ===== */
+.search-container,
+.product-search {
+    flex: 1;
+    max-width: 400px;
+    margin: 0 20px;
+}
+
+.search-form,
+.product-search {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    margin: 0;
+    height: 100%;
+}
+
+.search-form input,
+.product-search input[type="text"] {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    width: 100%;
+    font-size: 14px;
+    transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+}
+
+.search-form input:focus,
+.product-search input[type="text"]:focus {
+    outline: none;
+    border-color: #111;
+}
+
+.search-form button,
+.product-search .btn-primary {
+    padding: 8px 15px;
+    background: #090201;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-form button:hover,
+.product-search .btn-primary:hover {
+    background: #c0392b;
+    color: #fff;
+}
+
+.product-search input[type="text"] {
+    border-radius: 30px;
+    font-size: 1.1rem;
+    width: 300px;
+}
+
+/* ===== HERO SECTION ===== */
+.hero {
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+        url('https://images.unsplash.com/photo-1596462502278-27bfdc403348?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+    background-size: cover;
+    background-position: center;
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.hero .btn-primary {
+    background-color: #000;
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.hero .btn-primary:hover {
+    color: #ff69b4;
+}
+
+/* ===== BOTONES ===== */
+.btn-primary,
+.btn-secondary,
+.btn-add {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: #000;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0e0303;
+}
+
+.btn-primary.ver-productos:hover {
+    color: pink;
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid #000;
+    color: #000;
+}
+
+.btn-secondary:hover {
+    background-color: #000;
+    color: white;
+}
+
+.btn-add {
+    background: #000;
+    color: #fff;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.btn-add:hover {
+    background: #333;
+}
+
+/* ===== PRODUCTOS ===== */
+.products-header h1,
+.featured-products h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #111;
+    transition: color 0.3s;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+    padding: 2rem 5%;
+}
+
+.product-card {
+    border: 2px solid #fcfafa;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s, border-color 0.3s;
+}
+
+.product-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 12px 30px rgba(255, 105, 180, 0.5);
+}
+
+.product-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1rem;
+    transition: transform 0.3s;
+}
+
+.product-card:hover img {
+    transform: scale(1.07);
+}
+
+.product-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #111;
+    margin: 1rem 0 0.5rem;
+    transition: color 0.3s;
+}
+
+.product-card .description {
+    color: #090909;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    transition: color 0.3s;
+}
+
+.price {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+    transition: color 0.3s;
+}
+
+.product-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.product-actions .btn-primary {
+    background: #111;
+    color: #fff;
+}
+
+.product-actions .btn-primary:hover {
+    background-color: #080808;
+}
+
+.product-actions .btn-secondary {
+    border: 2px solid #111; 
+    background: #fff;
+    color: #111;
+}
+
+.product-actions .btn-secondary:hover {
+    background-color: #111;
+    color: #fff;
+}
+
+/* ===== FILTRO DE CATEGORÍAS ===== */
+.category-filter {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 2rem 0 2.5rem;
+}
+
+.category-filter a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 2rem;
+    border-radius: 30px;
+    border: 2px solid #111;
+    background: #fff;
+    color: #111;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.3s;
+}
+
+.category-filter a svg {
+    vertical-align: middle;
+    margin-right: 0.2rem;
+}
+
+.category-filter a.active,
+.category-filter a:hover {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+    transform: scale(1.05);
+}
+
+.category-filter a.active svg,
+.category-filter a:hover svg {
+    filter: drop-shadow(0 0 3px #fff);
+}
+
+/* ===== INICIO DE SESIÓN Y REGISTRO ===== */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 75vh;
+    padding: 2rem;
+}
+
+.auth-form {
+    background: linear-gradient(145deg, #fff, #f0f0f0);
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    transition: background 0.3s ease, color 0.3s ease;
+    position: relative;
+}
+
+.auth-form h2 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    color: #111;
+    font-weight: 700;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #111;
+    text-align: left;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fff;
+    color: #111;
+}
+
+.auth-form input:focus {
+    border-color: #9b59b6;
+    outline: none;
+    box-shadow: 0 0 10px rgba(155, 89, 182, 0.3);
+}
+
+.auth-form button {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.auth-form button:hover {
+    transform: scale(1.05);
+}
+
+/* ===== FOOTER ===== */
+.site-footer {
+    background: #111;
+    color: #fff;
+    text-align: center;
+    padding: 18px 0;
+    font-size: 1rem;
+    margin-top: auto;
+    width: 100%;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+}
+
+/* ===== MODO OSCURO ===== */
+body.dark-mode {
+    background-color: #121212;
+    color: #eaeaea;
+}
+
+body.dark-mode .navbar {
+    background-color: #1b1b1b;
+}
+
+body.dark-mode .nav-menu a,
+body.dark-mode .nav-auth a,
+body.dark-mode .nav-auth span {
+    color: #fff;
+}
+
+body.dark-mode .auth-form {
+    background: linear-gradient(145deg, #222, #333);
+}
+
+body.dark-mode .auth-form h2,
+body.dark-mode .auth-form label,
+body.dark-mode .auth-form input {
+    color: #fff;
+}
+
+body.dark-mode .auth-form input {
+    background-color: #1b1b1b;
+    border-color: #555;
+}
+
+body.dark-mode .auth-form button {
+    color: #fff;
+}
+
+/* DROPDOWN MODO OSCURO */
+body.dark-mode .dropdown-content {
+    background-color: #222;
+}
+
+body.dark-mode .dropdown-content a,
+body.dark-mode .dropdown-content button {
+    color: #fff;
+}
+
+body.dark-mode .dropdown-content a:hover,
+body.dark-mode .dropdown-content button:hover {
+    background-color: #555;
+}
+
+/* === PRODUCTOS MODO OSCURO === */
+body.dark-mode .product-card {
+    background-color: #111;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+body.dark-mode .product-card h3,
+body.dark-mode .product-card .description,
+body.dark-mode .price {
+    color: #fff;
+}
+
+/* ✅ CORRECCIÓN: NUESTROS PRODUCTOS MODO OSCURO */
+body.dark-mode .products-header h1,
+body.dark-mode .featured-products h2 {
+    color: #fff;
+}
+
+body.dark-mode .product-card .btn-primary {
+    background-color: #000;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+body.dark-mode .product-card .btn-primary:hover {
+    background-color: #333;
+    color: #fff;
+    border-color: #fff;
+    transform: scale(1.05);
+}
+
+body.dark-mode .product-card .btn-secondary {
+    background-color: #000;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+body.dark-mode .product-card .btn-secondary:hover {
+    background-color: #fff;
+    color: #000;
+    border: 2px solid #fff;
+    transform: scale(1.05);
+}
+
+/* === FILTRO DE CATEGORÍAS MODO OSCURO === */
+body.dark-mode .category-filter a {
+    background: #000;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
+body.dark-mode .category-filter a:hover,
+body.dark-mode .category-filter a.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+    transform: scale(1.05);
+}
+
+body.dark-mode .category-filter a svg {
+    filter: drop-shadow(0 0 2px #fff);
+}
