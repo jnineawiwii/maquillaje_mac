@@ -97,6 +97,30 @@
       .search-container { flex-basis: 100%; max-width: none; margin: 8px 0; }
       .nav-menu { flex-wrap: wrap; justify-content:center; gap:10px; }
     }
+    
+    /* Estilos para el lector de voz */
+    .sr-active {
+      outline: 2px solid #ffd700 !important;
+      outline-offset: 2px;
+    }
+    
+    .sr-announcement {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #7b1fa2;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 9999;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .sr-announcement.show {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -198,6 +222,9 @@
 <!-- Live region para lector de pantalla -->
 <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
+<!-- Indicador visual para anuncios del lector -->
+<div id="sr-visual-announcer" class="sr-announcement" aria-hidden="true"></div>
+
 <!-- Main -->
 <main id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
@@ -247,24 +274,133 @@ document.addEventListener('DOMContentLoaded', () => {
     updateThemeBtnText();
     themeBtnMenu.addEventListener('click', toggleTheme);
 
-    // ===== Lector de pantalla =====
+    // ===== Lector de pantalla MEJORADO =====
     let srEnabled = false;
     let srSpeechEnabled = false;
+    window.srEnabled = false;
     const srToggleMenu = document.getElementById('srToggleBtnMenu');
-    function srAnnounce(msg, politeness='polite'){
+    const srVisualAnnouncer = document.getElementById('sr-visual-announcer');
+    
+    // Función mejorada para anunciar mensajes
+    function srAnnounce(msg, politeness='polite', visualFeedback = true){
+        // Anuncio para lectores de pantalla
         const el = document.getElementById('sr-announcer');
-        if(el){ el.setAttribute('aria-live', politeness); el.textContent = ''; setTimeout(()=>el.textContent=msg,100);}
+        if(el){ 
+            el.setAttribute('aria-live', politeness); 
+            el.textContent = ''; 
+            setTimeout(() => el.textContent = msg, 100);
+        }
+        
+        // Feedback visual opcional
+        if (visualFeedback && srVisualAnnouncer) {
+            srVisualAnnouncer.textContent = msg;
+            srVisualAnnouncer.classList.add('show');
+            setTimeout(() => {
+                srVisualAnnouncer.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Síntesis de voz
         if(srSpeechEnabled && 'speechSynthesis' in window && msg){
-            try{window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(msg); u.lang='es-ES'; window.speechSynthesis.speak(u);}catch(e){console.warn(e);}
+            try{
+                window.speechSynthesis.cancel(); 
+                const u = new SpeechSynthesisUtterance(msg); 
+                u.lang = 'es-ES';
+                u.rate = 0.9; // Velocidad ligeramente reducida para mejor comprensión
+                window.speechSynthesis.speak(u);
+            } catch(e){
+                console.warn('Error en síntesis de voz:', e);
+            }
         }
     }
+    
+    // Función para obtener texto descriptivo de un elemento
+    function getElementDescription(el) {
+        if (!el) return '';
+        
+        // Prioridad: atributos de accesibilidad
+        let msg = el.getAttribute('data-sr-message') || 
+                  el.getAttribute('aria-label') || 
+                  el.getAttribute('title') || '';
+        
+        // Si no hay mensaje específico, obtener texto del elemento
+        if (!msg) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+                msg = el.getAttribute('placeholder') || el.value || '';
+            } else if (el.tagName === 'IMG') {
+                msg = el.getAttribute('alt') || '';
+            } else {
+                // Para otros elementos, obtener texto visible
+                msg = (el.textContent || '').trim();
+            }
+        }
+        
+        // Si es un botón o enlace sin texto, intentar describir su función
+        if (!msg && (el.tagName === 'BUTTON' || el.tagName === 'A')) {
+            if (el.querySelector('i')) {
+                const iconClass = el.querySelector('i').className;
+                if (iconClass.includes('fa-search')) msg = 'Buscar';
+                else if (iconClass.includes('fa-bars')) msg = 'Menú';
+                else if (iconClass.includes('fa-shopping-cart')) msg = 'Carrito de compras';
+            }
+        }
+        
+        return msg.replace(/\s+/g, ' ').trim();
+    }
+    
+    // Función para anunciar secciones cuando se navega
+    function announceSectionOnNavigation() {
+        if (!srEnabled) return;
+        
+        // Obtener la sección actual basada en la URL
+        const path = window.location.pathname;
+        let sectionName = '';
+        
+        if (path.includes('products')) {
+            if (path.includes('labios')) sectionName = 'Productos para labios';
+            else if (path.includes('ojos')) sectionName = 'Productos para ojos';
+            else if (path.includes('rostro')) sectionName = 'Productos para rostro';
+            else sectionName = 'Todos los productos';
+        } else if (path.includes('cart')) {
+            sectionName = 'Carrito de compras';
+        } else if (path.includes('admin')) {
+            sectionName = 'Panel de administración';
+        } else if (path.includes('guide')) {
+            sectionName = 'Guía de usuario';
+        } else if (path.includes('login')) {
+            sectionName = 'Iniciar sesión';
+        } else if (path.includes('register')) {
+            sectionName = 'Registrarse';
+        } else {
+            sectionName = 'Página principal';
+        }
+        
+        setTimeout(() => {
+            srAnnounce(`Navegando a: ${sectionName}`, 'polite', true);
+        }, 500);
+    }
+    
+    // Función para activar/desactivar el lector
     function toggleSR(){
         srEnabled = !srEnabled;
         srSpeechEnabled = srEnabled;
+        window.srEnabled = srEnabled;
+        
         srToggleMenu.classList.toggle('active', srEnabled);
         srToggleMenu.setAttribute('aria-pressed', srEnabled?'true':'false');
-        srAnnounce(srEnabled ? 'Lector activado':'Lector desactivado');
+        
+        if (srEnabled) {
+            srAnnounce('Lector de voz activado. Ahora se anunciarán automáticamente secciones, botones y elementos interactivos.', 'assertive', true);
+            document.body.classList.add('sr-active');
+            
+            // Anunciar la sección actual al activar
+            setTimeout(announceSectionOnNavigation, 1000);
+        } else {
+            srAnnounce('Lector de voz desactivado.', 'assertive', true);
+            document.body.classList.remove('sr-active');
+        }
     }
+    
     srToggleMenu.addEventListener('click', toggleSR);
 
     // ===== Carrito efecto bump =====
@@ -280,83 +416,201 @@ document.addEventListener('DOMContentLoaded', () => {
             let count = parseInt(cartCount.textContent);
             cartCount.textContent = count + 1;
             bumpCart();
+            
+            // Anunciar acción si el lector está activo
+            if (srEnabled) {
+                srAnnounce('Producto agregado al carrito. Total: ' + (count + 1) + ' productos.', 'polite', true);
+            }
         });
     });
 
-  // --- Controles de accesibilidad (tamaño, espaciado, contraste) ---
-  const fontSizeRange = document.getElementById('fontSizeRange');
-  const fontSizeValue = document.getElementById('fontSizeValue');
-  const fontSizeReset = document.getElementById('fontSizeReset');
+    // --- Controles de accesibilidad (tamaño, espaciado, contraste) ---
+    const fontSizeRange = document.getElementById('fontSizeRange');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    const fontSizeReset = document.getElementById('fontSizeReset');
 
-  const spacingRange = document.getElementById('spacingRange');
-  const spacingValue = document.getElementById('spacingValue');
-  const spacingReset = document.getElementById('spacingReset');
+    const spacingRange = document.getElementById('spacingRange');
+    const spacingValue = document.getElementById('spacingValue');
+    const spacingReset = document.getElementById('spacingReset');
 
-  const toggleContrastBtn = document.getElementById('toggleContrastBtn');
+    const toggleContrastBtn = document.getElementById('toggleContrastBtn');
 
-  function loadA11y(){ try{ return JSON.parse(localStorage.getItem('a11ySettings'))||{} }catch(e){return{}} }
-  function saveA11y(s){ localStorage.setItem('a11ySettings', JSON.stringify(s)); }
+    function loadA11y(){ try{ return JSON.parse(localStorage.getItem('a11ySettings'))||{} }catch(e){return{}} }
+    function saveA11y(s){ localStorage.setItem('a11ySettings', JSON.stringify(s)); }
 
-  let a11y = loadA11y();
-  if(!a11y.fontSize) a11y.fontSize = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) + 'px';
-  if(!a11y.spacing) a11y.spacing = getComputedStyle(document.documentElement).getPropertyValue('--base-spacing') || '1rem';
-  a11y.highContrast = !!a11y.highContrast;
+    let a11y = loadA11y();
+    if(!a11y.fontSize) a11y.fontSize = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) + 'px';
+    if(!a11y.spacing) a11y.spacing = getComputedStyle(document.documentElement).getPropertyValue('--base-spacing') || '1rem';
+    a11y.highContrast = !!a11y.highContrast;
 
-  function applyA11y(){
-    document.documentElement.style.fontSize = a11y.fontSize;
-    document.documentElement.style.setProperty('--base-spacing', a11y.spacing);
-    if(a11y.highContrast) document.documentElement.classList.add('high-contrast'); else document.documentElement.classList.remove('high-contrast');
-    if(toggleContrastBtn) toggleContrastBtn.classList.toggle('active', a11y.highContrast);
+    function applyA11y(){
+        document.documentElement.style.fontSize = a11y.fontSize;
+        document.documentElement.style.setProperty('--base-spacing', a11y.spacing);
+        if(a11y.highContrast) document.documentElement.classList.add('high-contrast'); else document.documentElement.classList.remove('high-contrast');
+        if(toggleContrastBtn) toggleContrastBtn.classList.toggle('active', a11y.highContrast);
 
-    // actualizar valores visibles de los sliders si existen
-    const px = parseFloat(a11y.fontSize);
-    if(fontSizeRange){ fontSizeRange.value = Math.round(px); fontSizeValue.textContent = Math.round(px) + 'px'; }
-    const sp = parseFloat(a11y.spacing);
-    if(spacingRange){ spacingRange.value = sp; spacingValue.textContent = sp + 'rem'; }
-  }
-  applyA11y();
+        // actualizar valores visibles de los sliders si existen
+        const px = parseFloat(a11y.fontSize);
+        if(fontSizeRange){ fontSizeRange.value = Math.round(px); fontSizeValue.textContent = Math.round(px) + 'px'; }
+        const sp = parseFloat(a11y.spacing);
+        if(spacingRange){ spacingRange.value = sp; spacingValue.textContent = sp + 'rem'; }
+    }
+    applyA11y();
 
-  function srAnn(msg){ if(typeof srAnnounce === 'function') srAnnounce(msg,'polite'); }
+    function srAnn(msg){ 
+        if(typeof srAnnounce === 'function') srAnnounce(msg,'polite', true); 
+    }
 
-  // manejo del slider de fuente
-  if(fontSizeRange){
-    fontSizeRange.addEventListener('input', (e)=>{
-      const v = e.target.value;
-      a11y.fontSize = v + 'px';
-      applyA11y();
+    // manejo del slider de fuente
+    if(fontSizeRange){
+        fontSizeRange.addEventListener('input', (e)=>{
+            const v = e.target.value;
+            a11y.fontSize = v + 'px';
+            applyA11y();
+        });
+        fontSizeRange.addEventListener('change', (e)=>{
+            saveA11y(a11y);
+            srAnn('Tamaño de texto ' + e.target.value + ' píxeles');
+        });
+        fontSizeReset && fontSizeReset.addEventListener('click', ()=>{
+            a11y.fontSize = '16px';
+            applyA11y(); saveA11y(a11y); srAnn('Tamaño restablecido a 16 píxeles');
+        });
+    }
+
+    // manejo del slider de espaciado
+    if(spacingRange){
+        spacingRange.addEventListener('input', (e)=>{
+            const v = parseFloat(e.target.value).toFixed(2);
+            a11y.spacing = v + 'rem';
+            applyA11y();
+        });
+        spacingRange.addEventListener('change', (e)=>{
+            saveA11y(a11y);
+            srAnn('Espaciado ' + parseFloat(e.target.value).toFixed(2) + ' rem');
+        });
+        spacingReset && spacingReset.addEventListener('click', ()=>{
+            a11y.spacing = '1rem';
+            applyA11y(); saveA11y(a11y); srAnn('Espaciado restablecido');
+        });
+    }
+
+    toggleContrastBtn && toggleContrastBtn.addEventListener('click', ()=>{
+        a11y.highContrast = !a11y.highContrast;
+        applyA11y(); saveA11y(a11y);
+        srAnn(a11y.highContrast ? 'Alto contraste activado' : 'Alto contraste desactivado');
     });
-    fontSizeRange.addEventListener('change', (e)=>{
-      saveA11y(a11y);
-      srAnn('Tamaño de texto ' + e.target.value + ' píxeles');
-    });
-    fontSizeReset && fontSizeReset.addEventListener('click', ()=>{
-      a11y.fontSize = '16px';
-      applyA11y(); saveA11y(a11y); srAnn('Tamaño restablecido a 16 píxeles');
-    });
-  }
 
-  // manejo del slider de espaciado
-  if(spacingRange){
-    spacingRange.addEventListener('input', (e)=>{
-      const v = parseFloat(e.target.value).toFixed(2);
-      a11y.spacing = v + 'rem';
-      applyA11y();
-    });
-    spacingRange.addEventListener('change', (e)=>{
-      saveA11y(a11y);
-      srAnn('Espaciado ' + parseFloat(e.target.value).toFixed(2) + ' rem');
-    });
-    spacingReset && spacingReset.addEventListener('click', ()=>{
-      a11y.spacing = '1rem';
-      applyA11y(); saveA11y(a11y); srAnn('Espaciado restablecido');
-    });
-  }
+    // ===== DETECCIÓN AUTOMÁTICA DE ELEMENTOS PARA EL LECTOR =====
+    
+    // Anunciar elementos cuando reciben foco
+    document.addEventListener('focusin', (e) => {
+        if(!srEnabled) return;
+        
+        const el = e.target;
+        if(!el || el === document.body || el === document.documentElement) return;
+        
+        const msg = getElementDescription(el);
+        if(msg) {
+            // Pequeño retraso para evitar anuncios repetitivos en navegación rápida
+            clearTimeout(window.srFocusTimeout);
+            window.srFocusTimeout = setTimeout(() => {
+                srAnnounce(msg, 'polite', false);
+            }, 150);
+        }
+    }, true);
 
-  toggleContrastBtn && toggleContrastBtn.addEventListener('click', ()=>{
-    a11y.highContrast = !a11y.highContrast;
-    applyA11y(); saveA11y(a11y);
-    srAnn(a11y.highContrast ? 'Alto contraste activado' : 'Alto contraste desactivado');
-  });
+    // Anunciar elementos cuando se interactúa con ellos
+    document.addEventListener('click', (e) => {
+        if(!srEnabled) return;
+        
+        const el = e.target;
+        const msg = getElementDescription(el);
+        
+        if(msg && (el.tagName === 'BUTTON' || el.tagName === 'A' || el.getAttribute('role') === 'button')) {
+            srAnnounce(`${msg} - activado`, 'polite', true);
+        }
+    }, true);
+
+    // Anunciar cambios en formularios
+    document.addEventListener('change', (e) => {
+        if(!srEnabled) return;
+        
+        const el = e.target;
+        if(el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') {
+            const msg = getElementDescription(el);
+            if(msg) {
+                let value = '';
+                if(el.tagName === 'SELECT') {
+                    value = el.options[el.selectedIndex].text;
+                } else if(el.type === 'checkbox') {
+                    value = el.checked ? 'seleccionado' : 'deseleccionado';
+                } else if(el.type === 'radio') {
+                    value = el.checked ? 'seleccionado' : '';
+                }
+                
+                if(value) {
+                    srAnnounce(`${msg}: ${value}`, 'polite', true);
+                }
+            }
+        }
+    }, true);
+
+    // Anunciar cuando se carga nueva página o se cambia de sección
+    window.addEventListener('popstate', announceSectionOnNavigation);
+    
+    // Anunciar secciones cuando se cargan dinámicamente (para SPA)
+    const observer = new MutationObserver((mutations) => {
+        if(!srEnabled) return;
+        
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if(node.nodeType === 1) { // Element node
+                    if(node.tagName === 'SECTION' || node.getAttribute('role') === 'region') {
+                        const title = getElementDescription(node);
+                        if(title) {
+                            setTimeout(() => {
+                                srAnnounce(`Nueva sección: ${title}`, 'polite', true);
+                            }, 300);
+                        }
+                    }
+                }
+            });
+        });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Anunciar encabezados cuando están visibles (para contenido largo)
+    const headingObserver = new IntersectionObserver((entries) => {
+        if(!srEnabled) return;
+        
+        entries.forEach(entry => {
+            if(entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                const heading = entry.target;
+                const text = getElementDescription(heading);
+                if(text && heading.tagName.match(/^H[1-6]$/)) {
+                    // Evitar anunciar el mismo encabezado repetidamente
+                    if(heading.getAttribute('data-sr-announced') !== 'true') {
+                        heading.setAttribute('data-sr-announced', 'true');
+                        srAnnounce(`Encabezado: ${text}`, 'polite', false);
+                    }
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    // Observar todos los encabezados
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+        headingObserver.observe(heading);
+    });
+    
+    // Anunciar la página actual al cargar
+    setTimeout(() => {
+        if(srEnabled) {
+            announceSectionOnNavigation();
+        }
+    }, 1000);
 });
 </script>
 </body>
