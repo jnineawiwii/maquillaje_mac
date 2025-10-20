@@ -1,11 +1,54 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MAC Style Makeup Store</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAC Style Makeup Store</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Añadir: cabecera fija y espacio superior para el contenido -->
+  <style>
+    :root { --site-header-height: 72px; } /* ajusta si tu header tiene otra altura */
+
+    /* Fija la barra superior */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--site-header-height);
+      z-index: 1050; /* debe estar por encima del resto */
+      background: linear-gradient(90deg,#040210 0%, #0b0212 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 8px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+
+    /* Deja espacio para la cabecera fija para que el contenido no quede debajo */
+    body {
+      padding-top: var(--site-header-height);
+    }
+
+    /* Ajustes internos para que el buscador y los links sigan alineados */
+    .nav-brand { margin-right: 12px; font-weight:700; color:#fff; text-decoration:none; font-size:1.25rem; }
+    .search-container { flex: 1 1 480px; margin: 0 20px; }
+    .nav-menu { display:flex; gap:18px; align-items:center; margin-left:auto; list-style:none; padding:0; margin:0; }
+    .nav-menu li { display:inline-flex; align-items:center; }
+    .nav-menu a, .nav-menu span { color:#fff; text-decoration:none; padding:6px 8px; }
+
+    /* Asegura que dropdown se muestre por encima */
+    .dropdown .dropdown-content { z-index: 1100; }
+
+    @media (max-width: 768px) {
+      :root { --site-header-height: 88px; } /* si el header ocupa más alto en móvil */
+      .search-container { flex-basis: 100%; max-width: none; margin: 8px 0; }
+      .nav-menu { flex-wrap: wrap; justify-content:center; gap:10px; }
+    }
+  </style>
 </head>
 <body>
 
