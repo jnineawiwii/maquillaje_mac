@@ -9,7 +9,35 @@
 
   <!-- Añadir: cabecera fija y espacio superior para el contenido -->
   <style>
-    :root { --site-header-height: 72px; } /* ajusta si tu header tiene otra altura */
+    /* Variables y estilos para accesibilidad de lectura */
+    :root{
+      --base-font-size: 16px;
+      --base-line-height: 1.5;
+      --base-spacing: 1rem;
+    }
+    html {
+      font-size: var(--base-font-size);
+      /* usar --base-spacing como line-height para controlar interlineado */
+      line-height: var(--base-spacing);
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Aplicar espaciado consistente a párrafos, listas y headings */
+    body, p, ul, ol, li {
+      margin-top: 0;
+      margin-bottom: calc(var(--base-spacing) * 0.9);
+    }
+
+    /* algo más de separación entre párrafos largos y secciones */
+    p + p, h1 + p, h2 + p, .step-meta p {
+      margin-top: calc(var(--base-spacing) * 0.5);
+      margin-bottom: calc(var(--base-spacing) * 1.1);
+    }
+
+    /* Ajustar gaps en componentes flex/grid que usen --base-spacing */
+    .container, .viewer, .steps-list {
+      gap: var(--base-spacing);
+    }
 
     /* Fija la barra superior */
     .navbar {
@@ -42,6 +70,27 @@
 
     /* Asegura que dropdown se muestre por encima */
     .dropdown .dropdown-content { z-index: 1100; }
+
+    /* Alto contraste */
+    .high-contrast, .high-contrast body { background: #000 !important; color: #fff !important; }
+    .high-contrast a { color: #ffd500 !important; }
+
+    /* Controles dentro del dropdown */
+    .accessibility-controls { padding:8px 6px; display:flex; flex-direction:column; gap:8px; }
+    .size-controls, .spacing-controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .size-controls button, .spacing-controls button, #toggleContrastBtn {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .size-controls button.active, #toggleContrastBtn.active { background:#7b1fa2; box-shadow:0 6px 18px rgba(123,31,162,0.18); }
+    @media (max-width:768px){
+      .size-controls button, .spacing-controls button { font-size:0.88rem; padding:6px; }
+    }
 
     @media (max-width: 768px) {
       :root { --site-header-height: 88px; } /* si el header ocupa más alto en móvil */
@@ -91,6 +140,41 @@
             <div class="dropdown-content">
                 <!-- 1. Guía de usuario -->
                 <a href="{{ url_for('guide') }}">Guía de usuario</a>
+
+                <!-- ACCESIBILIDAD: controles de tamaño / espaciado / contraste -->
+                <div class="accessibility-controls" role="region" aria-label="Controles de lectura">
+                  <details id="fontSizeDetails">
+                    <summary style="font-weight:600; color:#fff; margin-bottom:6px; cursor:pointer;">Tamaño de lectura ▾</summary>
+                    <div style="padding:6px 4px 10px 4px;">
+                      <label for="fontSizeRange" style="display:flex;justify-content:space-between;align-items:center;color:#fff;">
+                        <span>Fuente</span>
+                        <span id="fontSizeValue" aria-live="polite" style="min-width:42px;text-align:right">16px</span>
+                      </label>
+                      <input id="fontSizeRange" type="range" min="12" max="28" step="1" value="16" style="width:100%; margin-top:6px;">
+                      <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button id="fontSizeReset" title="Restablecer tamaño" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#fff;cursor:pointer;">Restablecer</button>
+                      </div>
+                    </div>
+                  </details>
+
+                  <details id="spacingDetails" style="margin-top:8px;">
+                    <summary style="font-weight:600; color:#fff; margin-bottom:6px; cursor:pointer;">Espaciado ▾</summary>
+                    <div style="padding:6px 4px 10px 4px;">
+                      <label for="spacingRange" style="display:flex;justify-content:space-between;align-items:center;color:#fff;">
+                        <span>Interlineado</span>
+                        <span id="spacingValue" aria-live="polite" style="min-width:42px;text-align:right">1rem</span>
+                      </label>
+                      <input id="spacingRange" type="range" min="0.5" max="2.0" step="0.05" value="1.0" style="width:100%; margin-top:6px;">
+                      <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button id="spacingReset" title="Restablecer espaciado" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#fff;cursor:pointer;">Restablecer</button>
+                      </div>
+                    </div>
+                  </details>
+
+                  <div style="margin-top:8px;">
+                    <button id="toggleContrastBtn" class="sr-toggle" title="Alternar alto contraste">Alto contraste</button>
+                  </div>
+                </div>
 
                 <!-- 2. Lector -->
                 <button id="srToggleBtnMenu" class="sr-toggle">Lector</button>
@@ -198,6 +282,81 @@ document.addEventListener('DOMContentLoaded', () => {
             bumpCart();
         });
     });
+
+  // --- Controles de accesibilidad (tamaño, espaciado, contraste) ---
+  const fontSizeRange = document.getElementById('fontSizeRange');
+  const fontSizeValue = document.getElementById('fontSizeValue');
+  const fontSizeReset = document.getElementById('fontSizeReset');
+
+  const spacingRange = document.getElementById('spacingRange');
+  const spacingValue = document.getElementById('spacingValue');
+  const spacingReset = document.getElementById('spacingReset');
+
+  const toggleContrastBtn = document.getElementById('toggleContrastBtn');
+
+  function loadA11y(){ try{ return JSON.parse(localStorage.getItem('a11ySettings'))||{} }catch(e){return{}} }
+  function saveA11y(s){ localStorage.setItem('a11ySettings', JSON.stringify(s)); }
+
+  let a11y = loadA11y();
+  if(!a11y.fontSize) a11y.fontSize = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) + 'px';
+  if(!a11y.spacing) a11y.spacing = getComputedStyle(document.documentElement).getPropertyValue('--base-spacing') || '1rem';
+  a11y.highContrast = !!a11y.highContrast;
+
+  function applyA11y(){
+    document.documentElement.style.fontSize = a11y.fontSize;
+    document.documentElement.style.setProperty('--base-spacing', a11y.spacing);
+    if(a11y.highContrast) document.documentElement.classList.add('high-contrast'); else document.documentElement.classList.remove('high-contrast');
+    if(toggleContrastBtn) toggleContrastBtn.classList.toggle('active', a11y.highContrast);
+
+    // actualizar valores visibles de los sliders si existen
+    const px = parseFloat(a11y.fontSize);
+    if(fontSizeRange){ fontSizeRange.value = Math.round(px); fontSizeValue.textContent = Math.round(px) + 'px'; }
+    const sp = parseFloat(a11y.spacing);
+    if(spacingRange){ spacingRange.value = sp; spacingValue.textContent = sp + 'rem'; }
+  }
+  applyA11y();
+
+  function srAnn(msg){ if(typeof srAnnounce === 'function') srAnnounce(msg,'polite'); }
+
+  // manejo del slider de fuente
+  if(fontSizeRange){
+    fontSizeRange.addEventListener('input', (e)=>{
+      const v = e.target.value;
+      a11y.fontSize = v + 'px';
+      applyA11y();
+    });
+    fontSizeRange.addEventListener('change', (e)=>{
+      saveA11y(a11y);
+      srAnn('Tamaño de texto ' + e.target.value + ' píxeles');
+    });
+    fontSizeReset && fontSizeReset.addEventListener('click', ()=>{
+      a11y.fontSize = '16px';
+      applyA11y(); saveA11y(a11y); srAnn('Tamaño restablecido a 16 píxeles');
+    });
+  }
+
+  // manejo del slider de espaciado
+  if(spacingRange){
+    spacingRange.addEventListener('input', (e)=>{
+      const v = parseFloat(e.target.value).toFixed(2);
+      a11y.spacing = v + 'rem';
+      applyA11y();
+    });
+    spacingRange.addEventListener('change', (e)=>{
+      saveA11y(a11y);
+      srAnn('Espaciado ' + parseFloat(e.target.value).toFixed(2) + ' rem');
+    });
+    spacingReset && spacingReset.addEventListener('click', ()=>{
+      a11y.spacing = '1rem';
+      applyA11y(); saveA11y(a11y); srAnn('Espaciado restablecido');
+    });
+  }
+
+  toggleContrastBtn && toggleContrastBtn.addEventListener('click', ()=>{
+    a11y.highContrast = !a11y.highContrast;
+    applyA11y(); saveA11y(a11y);
+    srAnn(a11y.highContrast ? 'Alto contraste activado' : 'Alto contraste desactivado');
+  });
 });
 </script>
 </body>
