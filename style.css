@@ -3,17 +3,27 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Nueva Tipografía Principal */
+    font-family: 'Comfortaa', sans-serif;
     line-height: 1.6;
     color: #0e0d0d;
     background-color: #fff;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+
+    /* ✅ AGREGAMOS EL FILTRO Y LAS TRANSICIONES DE COLOR/FONDO AQUÍ */
+    filter: contrast(1); /* Valor inicial: 100% de contraste (1.0) */
+    transition: 
+        filter 0.3s ease,              /* Transición suave para el deslizador */
+        background-color 0.4s ease,    /* Transición para el modo oscuro */
+        color 0.4s ease,               /* Transición para el color del texto */
+        border-color 0.4s ease;
 }
 
 main {
@@ -635,11 +645,4 @@ body.dark-mode .category-filter a.active {
 
 body.dark-mode .category-filter a svg {
     filter: drop-shadow(0 0 2px #fff);
-}
-
-
-
-.grayscale {
-  filter: grayscale(var(--grayscale-percent, 0%)) !important;
-  transition: filter 0.3s ease;
 }

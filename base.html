@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +6,9 @@
   <title>MAC Style Makeup Store</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Comfortaa:wght@300..700&family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet"> 
 
   <!-- Añadir: cabecera fija y espacio superior para el contenido -->
   <style>
@@ -14,6 +17,7 @@
       --base-font-size: 16px;
       --base-line-height: 1.5;
       --base-spacing: 1rem;
+      --site-header-height: 64px; /* altura por defecto del header */
     }
     html {
       font-size: var(--base-font-size);
@@ -92,18 +96,12 @@
       .size-controls button, .spacing-controls button { font-size:0.88rem; padding:6px; }
     }
 
-    @media (max-width: 768px) {
-      :root { --site-header-height: 88px; } /* si el header ocupa más alto en móvil */
-      .search-container { flex-basis: 100%; max-width: none; margin: 8px 0; }
-      .nav-menu { flex-wrap: wrap; justify-content:center; gap:10px; }
-    }
-    
     /* Estilos para el lector de voz */
     .sr-active {
       outline: 2px solid #ffd700 !important;
       outline-offset: 2px;
     }
-    
+
     .sr-announcement {
       position: fixed;
       top: 10px;
@@ -117,11 +115,12 @@
       opacity: 0;
       transition: opacity 0.3s;
     }
-    
+
     .sr-announcement.show {
       opacity: 1;
     }
   </style>
+<!-- ...existing code... -->
 </head>
 <body>
 
@@ -137,7 +136,7 @@
 
     <!-- Buscador -->
     <div class="search-container">
-        <form action="{{ url_for('search') }}" method="GET" class="search-form">
+        <form action="{{ url_for('search') }}" method="GET" class
             <input type="text" name="q" placeholder="Buscar productos..." value="{{ request.args.get('q', '') }}">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
@@ -198,24 +197,6 @@
                   <div style="margin-top:8px;">
                     <button id="toggleContrastBtn" class="sr-toggle" title="Alternar alto contraste">Alto contraste</button>
                   </div>
-
-
-<!-- NUEVO: Escala de grises -->
-<details id="grayscaleDetails" style="margin-top:8px;">
-  <summary style="font-weight:600; color:#fff; margin-bottom:6px; cursor:pointer;">Escala de grises ▾</summary>
-  <div style="padding:6px 4px 10px 4px;">
-    <label for="grayscaleRange" style="display:flex;justify-content:space-between;align-items:center;color:#fff;">
-      <span>Intensidad</span>
-      <span id="grayscaleValue" aria-live="polite" style="min-width:42px;text-align:right">0%</span>
-    </label>
-    <input id="grayscaleRange" type="range" min="0" max="100" step="1" value="0" style="width:100%; margin-top:6px;">
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button id="grayscaleReset" title="Restablecer escala" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#fff;cursor:pointer;">Restablecer</button>
-    </div>
-  </div>
-</details>
-
-
                 </div>
 
                 <!-- 2. Lector -->
@@ -224,8 +205,6 @@
                 <!-- 3. Modo oscuro/claro -->
                 <button id="themeToggleBtnMenu" class="theme-btn"></button>
 
-
-                
                 <!-- 4. Cerrar sesión o Iniciar/Registrarse -->
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
@@ -271,10 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dropdown.classList.remove('show');
         }
     });
-
-
-
-
 
     // ===== Toggle modo oscuro/sol con texto =====
     const themeBtnMenu = document.getElementById('themeToggleBtnMenu');
@@ -582,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Anunciar cuando se carga nueva página o se cambia de sección
     window.addEventListener('popstate', announceSectionOnNavigation);
-    
+
     // Anunciar secciones cuando se cargan dinámicamente (para SPA)
     const observer = new MutationObserver((mutations) => {
         if(!srEnabled) return;
@@ -635,41 +610,6 @@ document.addEventListener('DOMContentLoaded', () => {
             announceSectionOnNavigation();
         }
     }, 1000);
-
-
-
-    // ===== Escala de grises =====
-const grayscaleRange = document.getElementById('grayscaleRange');
-const grayscaleValue = document.getElementById('grayscaleValue');
-const grayscaleReset = document.getElementById('grayscaleReset');
-
-if(!a11y.grayscale) a11y.grayscale = 0; // valor inicial 0%
-
-function applyGrayscale(){
-    document.body.style.setProperty('--grayscale-percent', a11y.grayscale + '%');
-    document.body.classList.toggle('grayscale', a11y.grayscale > 0);
-    if(grayscaleValue) grayscaleValue.textContent = a11y.grayscale + '%';
-}
-
-applyGrayscale();
-
-if(grayscaleRange){
-    grayscaleRange.addEventListener('input', e => {
-        a11y.grayscale = parseInt(e.target.value);
-        applyGrayscale();
-    });
-    grayscaleRange.addEventListener('change', e => {
-        saveA11y(a11y);
-        srAnn('Escala de grises: ' + e.target.value + '%');
-    });
-    grayscaleReset && grayscaleReset.addEventListener('click', ()=>{
-        a11y.grayscale = 0;
-        applyGrayscale();
-        saveA11y(a11y);
-        srAnn('Escala de grises restablecida');
-    });
-}
-
 });
 </script>
 </body>
