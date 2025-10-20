@@ -636,3 +636,10 @@ body.dark-mode .category-filter a.active {
 body.dark-mode .category-filter a svg {
     filter: drop-shadow(0 0 2px #fff);
 }
+
+
+
+.grayscale {
+  filter: grayscale(var(--grayscale-percent, 0%)) !important;
+  transition: filter 0.3s ease;
+}
