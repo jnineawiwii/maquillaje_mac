@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAC Style Makeup Store</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Comfortaa:wght@300..700&family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet"> 
+
+  <!-- Añadir: cabecera fija y espacio superior para el contenido -->
+  <style>
+    /* Variables y estilos para accesibilidad de lectura */
+    :root{
+      --base-font-size: 16px;
+      --base-line-height: 1.5;
+      --base-spacing: 1rem;
+      --site-header-height: 64px; /* altura por defecto del header */
+    }
+    html {
+      font-size: var(--base-font-size);
+      /* usar --base-spacing como line-height para controlar interlineado */
+      line-height: var(--base-spacing);
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Aplicar espaciado consistente a párrafos, listas y headings */
+    body, p, ul, ol, li {
+      margin-top: 0;
+      margin-bottom: calc(var(--base-spacing) * 0.9);
+    }
+
+    /* algo más de separación entre párrafos largos y secciones */
+    p + p, h1 + p, h2 + p, .step-meta p {
+      margin-top: calc(var(--base-spacing) * 0.5);
+      margin-bottom: calc(var(--base-spacing) * 1.1);
+    }
+
+    /* Ajustar gaps en componentes flex/grid que usen --base-spacing */
+    .container, .viewer, .steps-list {
+      gap: var(--base-spacing);
+    }
+
+    /* Fija la barra superior */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--site-header-height);
+      z-index: 1050; /* debe estar por encima del resto */
+      background: linear-gradient(90deg,#040210 0%, #0b0212 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 8px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+
+    /* Deja espacio para la cabecera fija para que el contenido no quede debajo */
+    body {
+      padding-top: var(--site-header-height);
+    }
+
+    /* Ajustes internos para que el buscador y los links sigan alineados */
+    .nav-brand { margin-right: 12px; font-weight:700; color:#fff; text-decoration:none; font-size:1.25rem; }
+    .search-container { flex: 1 1 480px; margin: 0 20px; }
+    .nav-menu { display:flex; gap:18px; align-items:center; margin-left:auto; list-style:none; padding:0; margin:0; }
+    .nav-menu li { display:inline-flex; align-items:center; }
+    .nav-menu a, .nav-menu span { color:#fff; text-decoration:none; padding:6px 8px; }
+
+    /* Asegura que dropdown se muestre por encima */
+    .dropdown .dropdown-content { z-index: 1100; }
+
+    /* Alto contraste */
+    .high-contrast, .high-contrast body { background: #000 !important; color: #fff !important; }
+    .high-contrast a { color: #ffd500 !important; }
+
+    /* Controles dentro del dropdown */
+    .accessibility-controls { padding:8px 6px; display:flex; flex-direction:column; gap:8px; }
+    .size-controls, .spacing-controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .size-controls button, .spacing-controls button, #toggleContrastBtn {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .size-controls button.active, #toggleContrastBtn.active { background:#7b1fa2; box-shadow:0 6px 18px rgba(123,31,162,0.18); }
+    @media (max-width:768px){
+      .size-controls button, .spacing-controls button { font-size:0.88rem; padding:6px; }
+    }
+
+    /* Estilos para el lector de voz */
+    .sr-active {
+      outline: 2px solid #ffd700 !important;
+      outline-offset: 2px;
+    }
+
+    .sr-announcement {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #7b1fa2;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      z-index: 9999;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .sr-announcement.show {
+      opacity: 1;
+    }
+  </style>
+<!-- ...existing code... -->
+</head>
+<body>
+
+<!-- Skip link -->
+<a class="sr-only sr-only-focusable" href="#main-content">Saltar al contenido</a>
+
+<!-- Cabecera -->
+<header>
+<nav class="navbar">
+    <div class="nav-brand">
+        <a href="{{ url_for('index') }}" class="mac-style">MAC Style</a>
+    </div>
+
+    <!-- Buscador -->
+    <div class="search-container">
+        <form action="{{ url_for('search') }}" method="GET" class
+            <input type="text" name="q" placeholder="Buscar productos..." value="{{ request.args.get('q', '') }}">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+
+    <!-- Menú principal -->
+    <ul class="nav-menu">
+        {% if current_user.is_authenticated and current_user.is_admin() %}
+            <li class="admin-section"><a href="{{ url_for('admin_dashboard') }}">Administración</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('products') }}">Productos</a></li>
+        <li><a href="{{ url_for('products', category='labios') }}">Labios</a></li>
+        <li><a href="{{ url_for('products', category='ojos') }}">Ojos</a></li>
+        <li><a href="{{ url_for('products', category='rostro') }}">Rostro</a></li>
+
+        {% if current_user.is_authenticated %}
+            <li><span>Hola, {{ current_user.username }}</span></li>
+            <li><a href="{{ url_for('cart') }}" class="cart-icon">🛒<span class="cart-count">0</span></a></li>
+        {% endif %}
+
+        <!-- Dropdown Menu: SOLO hasta la derecha, con las 3 rayitas -->
+        <li class="dropdown">
+            <button class="dropdown-btn"><i class="fas fa-bars"></i></button>
+            <div class="dropdown-content">
+                <!-- 1. Guía de usuario -->
+                <a href="{{ url_for('guide') }}">Guía de usuario</a>
+
+                <!-- ACCESIBILIDAD: controles de tamaño / espaciado / contraste -->
+                <div class="accessibility-controls" role="region" aria-label="Controles de lectura">
+                  <details id="fontSizeDetails">
+                    <summary style="font-weight:600; color:#fff; margin-bottom:6px; cursor:pointer;">Tamaño de lectura ▾</summary>
+                    <div style="padding:6px 4px 10px 4px;">
+                      <label for="fontSizeRange" style="display:flex;justify-content:space-between;align-items:center;color:#fff;">
+                        <span>Fuente</span>
+                        <span id="fontSizeValue" aria-live="polite" style="min-width:42px;text-align:right">16px</span>
+                      </label>
+                      <input id="fontSizeRange" type="range" min="12" max="28" step="1" value="16" style="width:100%; margin-top:6px;">
+                      <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button id="fontSizeReset" title="Restablecer tamaño" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#fff;cursor:pointer;">Restablecer</button>
+                      </div>
+                    </div>
+                  </details>
+
+                  <details id="spacingDetails" style="margin-top:8px;">
+                    <summary style="font-weight:600; color:#fff; margin-bottom:6px; cursor:pointer;">Espaciado ▾</summary>
+                    <div style="padding:6px 4px 10px 4px;">
+                      <label for="spacingRange" style="display:flex;justify-content:space-between;align-items:center;color:#fff;">
+                        <span>Interlineado</span>
+                        <span id="spacingValue" aria-live="polite" style="min-width:42px;text-align:right">1rem</span>
+                      </label>
+                      <input id="spacingRange" type="range" min="0.5" max="2.0" step="0.05" value="1.0" style="width:100%; margin-top:6px;">
+                      <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button id="spacingReset" title="Restablecer espaciado" style="flex:1;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#fff;cursor:pointer;">Restablecer</button>
+                      </div>
+                    </div>
+                  </details>
+
+                  <div style="margin-top:8px;">
+                    <button id="toggleContrastBtn" class="sr-toggle" title="Alternar alto contraste">Alto contraste</button>
+                  </div>
+                </div>
+
+                <!-- 2. Lector -->
+                <button id="srToggleBtnMenu" class="sr-toggle">Lector</button>
+
+                <!-- 3. Modo oscuro/claro -->
+                <button id="themeToggleBtnMenu" class="theme-btn"></button>
+
+                <!-- 4. Cerrar sesión o Iniciar/Registrarse -->
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                    <a href="{{ url_for('register') }}">Registrarse</a>
+                {% endif %}
+            </div>
+        </li>
+    </ul>
+</nav>
+</header>
+
+<!-- Live region para lector de pantalla -->
+<div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Indicador visual para anuncios del lector -->
+<div id="sr-visual-announcer" class="sr-announcement" aria-hidden="true"></div>
+
+<!-- Main -->
+<main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <p>© 2023 MAC Style Makeup Store. Proyecto estudiantil sin derechos de autor.</p>
+</footer>
+
+<!-- Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ===== Dropdown usuario =====
+    const dropdown = document.querySelector('.dropdown');
+    const dropdownBtn = dropdown.querySelector('.dropdown-btn');
+
+    dropdownBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', e => {
+        if(!dropdown.contains(e.target)){
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // ===== Toggle modo oscuro/sol con texto =====
+    const themeBtnMenu = document.getElementById('themeToggleBtnMenu');
+
+    function updateThemeBtnText() {
+        themeBtnMenu.textContent = document.body.classList.contains('dark-mode') ?
+            'Cambiar a modo claro' :
+            'Cambiar a modo oscuro';
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark':'light');
+        updateThemeBtnText();
+    }
+
+    // Inicializar texto según localStorage
+    if(localStorage.getItem('theme') === 'dark'){
+        document.body.classList.add('dark-mode');
+    }
+    updateThemeBtnText();
+    themeBtnMenu.addEventListener('click', toggleTheme);
+
+    // ===== Lector de pantalla MEJORADO =====
+    let srEnabled = false;
+    let srSpeechEnabled = false;
+    window.srEnabled = false;
+    const srToggleMenu = document.getElementById('srToggleBtnMenu');
+    const srVisualAnnouncer = document.getElementById('sr-visual-announcer');
+    
+    // Función mejorada para anunciar mensajes
+    function srAnnounce(msg, politeness='polite', visualFeedback = true){
+        // Anuncio para lectores de pantalla
+        const el = document.getElementById('sr-announcer');
+        if(el){ 
+            el.setAttribute('aria-live', politeness); 
+            el.textContent = ''; 
+            setTimeout(() => el.textContent = msg, 100);
+        }
+        
+        // Feedback visual opcional
+        if (visualFeedback && srVisualAnnouncer) {
+            srVisualAnnouncer.textContent = msg;
+            srVisualAnnouncer.classList.add('show');
+            setTimeout(() => {
+                srVisualAnnouncer.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Síntesis de voz
+        if(srSpeechEnabled && 'speechSynthesis' in window && msg){
+            try{
+                window.speechSynthesis.cancel(); 
+                const u = new SpeechSynthesisUtterance(msg); 
+                u.lang = 'es-ES';
+                u.rate = 0.9; // Velocidad ligeramente reducida para mejor comprensión
+                window.speechSynthesis.speak(u);
+            } catch(e){
+                console.warn('Error en síntesis de voz:', e);
+            }
+        }
+    }
+    
+    // Función para obtener texto descriptivo de un elemento
+    function getElementDescription(el) {
+        if (!el) return '';
+        
+        // Prioridad: atributos de accesibilidad
+        let msg = el.getAttribute('data-sr-message') || 
+                  el.getAttribute('aria-label') || 
+                  el.getAttribute('title') || '';
+        
+        // Si no hay mensaje específico, obtener texto del elemento
+        if (!msg) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+                msg = el.getAttribute('placeholder') || el.value || '';
+            } else if (el.tagName === 'IMG') {
+                msg = el.getAttribute('alt') || '';
+            } else {
+                // Para otros elementos, obtener texto visible
+                msg = (el.textContent || '').trim();
+            }
+        }
+        
+        // Si es un botón o enlace sin texto, intentar describir su función
+        if (!msg && (el.tagName === 'BUTTON' || el.tagName === 'A')) {
+            if (el.querySelector('i')) {
+                const iconClass = el.querySelector('i').className;
+                if (iconClass.includes('fa-search')) msg = 'Buscar';
+                else if (iconClass.includes('fa-bars')) msg = 'Menú';
+                else if (iconClass.includes('fa-shopping-cart')) msg = 'Carrito de compras';
+            }
+        }
+        
+        return msg.replace(/\s+/g, ' ').trim();
+    }
+    
+    // Función para anunciar secciones cuando se navega
+    function announceSectionOnNavigation() {
+        if (!srEnabled) return;
+        
+        // Obtener la sección actual basada en la URL
+        const path = window.location.pathname;
+        let sectionName = '';
+        
+        if (path.includes('products')) {
+            if (path.includes('labios')) sectionName = 'Productos para labios';
+            else if (path.includes('ojos')) sectionName = 'Productos para ojos';
+            else if (path.includes('rostro')) sectionName = 'Productos para rostro';
+            else sectionName = 'Todos los productos';
+        } else if (path.includes('cart')) {
+            sectionName = 'Carrito de compras';
+        } else if (path.includes('admin')) {
+            sectionName = 'Panel de administración';
+        } else if (path.includes('guide')) {
+            sectionName = 'Guía de usuario';
+        } else if (path.includes('login')) {
+            sectionName = 'Iniciar sesión';
+        } else if (path.includes('register')) {
+            sectionName = 'Registrarse';
+        } else {
+            sectionName = 'Página principal';
+        }
+        
+        setTimeout(() => {
+            srAnnounce(`Navegando a: ${sectionName}`, 'polite', true);
+        }, 500);
+    }
+    
+    // Función para activar/desactivar el lector
+    function toggleSR(){
+        srEnabled = !srEnabled;
+        srSpeechEnabled = srEnabled;
+        window.srEnabled = srEnabled;
+        
+        srToggleMenu.classList.toggle('active', srEnabled);
+        srToggleMenu.setAttribute('aria-pressed', srEnabled?'true':'false');
+        
+        if (srEnabled) {
+            srAnnounce('Lector de voz activado. Ahora se anunciarán automáticamente secciones, botones y elementos interactivos.', 'assertive', true);
+            document.body.classList.add('sr-active');
+            
+            // Anunciar la sección actual al activar
+            setTimeout(announceSectionOnNavigation, 1000);
+        } else {
+            srAnnounce('Lector de voz desactivado.', 'assertive', true);
+            document.body.classList.remove('sr-active');
+        }
+    }
+    
+    srToggleMenu.addEventListener('click', toggleSR);
+
+    // ===== Carrito efecto bump =====
+    const cartCount = document.querySelector('.cart-count');
+    function bumpCart(){
+        cartCount.classList.add('bump');
+        setTimeout(()=>cartCount.classList.remove('bump'),200);
+    }
+
+    // Simulación: agregar producto
+    document.querySelectorAll('.btn-add').forEach(btn=>{
+        btn.addEventListener('click', () => {
+            let count = parseInt(cartCount.textContent);
+            cartCount.textContent = count + 1;
+            bumpCart();
+            
+            // Anunciar acción si el lector está activo
+            if (srEnabled) {
+                srAnnounce('Producto agregado al carrito. Total: ' + (count + 1) + ' productos.', 'polite', true);
+            }
+        });
+    });
+
+    // --- Controles de accesibilidad (tamaño, espaciado, contraste) ---
+    const fontSizeRange = document.getElementById('fontSizeRange');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    const fontSizeReset = document.getElementById('fontSizeReset');
+
+    const spacingRange = document.getElementById('spacingRange');
+    const spacingValue = document.getElementById('spacingValue');
+    const spacingReset = document.getElementById('spacingReset');
+
+    const toggleContrastBtn = document.getElementById('toggleContrastBtn');
+
+    function loadA11y(){ try{ return JSON.parse(localStorage.getItem('a11ySettings'))||{} }catch(e){return{}} }
+    function saveA11y(s){ localStorage.setItem('a11ySettings', JSON.stringify(s)); }
+
+    let a11y = loadA11y();
+    if(!a11y.fontSize) a11y.fontSize = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) + 'px';
+    if(!a11y.spacing) a11y.spacing = getComputedStyle(document.documentElement).getPropertyValue('--base-spacing') || '1rem';
+    a11y.highContrast = !!a11y.highContrast;
+
+    function applyA11y(){
+        document.documentElement.style.fontSize = a11y.fontSize;
+        document.documentElement.style.setProperty('--base-spacing', a11y.spacing);
+        if(a11y.highContrast) document.documentElement.classList.add('high-contrast'); else document.documentElement.classList.remove('high-contrast');
+        if(toggleContrastBtn) toggleContrastBtn.classList.toggle('active', a11y.highContrast);
+
+        // actualizar valores visibles de los sliders si existen
+        const px = parseFloat(a11y.fontSize);
+        if(fontSizeRange){ fontSizeRange.value = Math.round(px); fontSizeValue.textContent = Math.round(px) + 'px'; }
+        const sp = parseFloat(a11y.spacing);
+        if(spacingRange){ spacingRange.value = sp; spacingValue.textContent = sp + 'rem'; }
+    }
+    applyA11y();
+
+    function srAnn(msg){ 
+        if(typeof srAnnounce === 'function') srAnnounce(msg,'polite', true); 
+    }
+
+    // manejo del slider de fuente
+    if(fontSizeRange){
+        fontSizeRange.addEventListener('input', (e)=>{
+            const v = e.target.value;
+            a11y.fontSize = v + 'px';
+            applyA11y();
+        });
+        fontSizeRange.addEventListener('change', (e)=>{
+            saveA11y(a11y);
+            srAnn('Tamaño de texto ' + e.target.value + ' píxeles');
+        });
+        fontSizeReset && fontSizeReset.addEventListener('click', ()=>{
+            a11y.fontSize = '16px';
+            applyA11y(); saveA11y(a11y); srAnn('Tamaño restablecido a 16 píxeles');
+        });
+    }
+
+    // manejo del slider de espaciado
+    if(spacingRange){
+        spacingRange.addEventListener('input', (e)=>{
+            const v = parseFloat(e.target.value).toFixed(2);
+            a11y.spacing = v + 'rem';
+            applyA11y();
+        });
+        spacingRange.addEventListener('change', (e)=>{
+            saveA11y(a11y);
+            srAnn('Espaciado ' + parseFloat(e.target.value).toFixed(2) + ' rem');
+        });
+        spacingReset && spacingReset.addEventListener('click', ()=>{
+            a11y.spacing = '1rem';
+            applyA11y(); saveA11y(a11y); srAnn('Espaciado restablecido');
+        });
+    }
+
+    toggleContrastBtn && toggleContrastBtn.addEventListener('click', ()=>{
+        a11y.highContrast = !a11y.highContrast;
+        applyA11y(); saveA11y(a11y);
+        srAnn(a11y.highContrast ? 'Alto contraste activado' : 'Alto contraste desactivado');
+    });
+
+    // ===== DETECCIÓN AUTOMÁTICA DE ELEMENTOS PARA EL LECTOR =====
+    
+    // Anunciar elementos cuando reciben foco
+    document.addEventListener('focusin', (e) => {
+        if(!srEnabled) return;
+        
+        const el = e.target;
+        if(!el || el === document.body || el === document.documentElement) return;
+        
+        const msg = getElementDescription(el);
+        if(msg) {
+            // Pequeño retraso para evitar anuncios repetitivos en navegación rápida
+            clearTimeout(window.srFocusTimeout);
+            window.srFocusTimeout = setTimeout(() => {
+                srAnnounce(msg, 'polite', false);
+            }, 150);
+        }
+    }, true);
+
+    // Anunciar elementos cuando se interactúa con ellos
+    document.addEventListener('click', (e) => {
+        if(!srEnabled) return;
+        
+        const el = e.target;
+        const msg = getElementDescription(el);
+        
+        if(msg && (el.tagName === 'BUTTON' || el.tagName === 'A' || el.getAttribute('role') === 'button')) {
+            srAnnounce(`${msg} - activado`, 'polite', true);
+        }
+    }, true);
+
+    // Anunciar cambios en formularios
+    document.addEventListener('change', (e) => {
+        if(!srEnabled) return;
+        
+        const el = e.target;
+        if(el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') {
+            const msg = getElementDescription(el);
+            if(msg) {
+                let value = '';
+                if(el.tagName === 'SELECT') {
+                    value = el.options[el.selectedIndex].text;
+                } else if(el.type === 'checkbox') {
+                    value = el.checked ? 'seleccionado' : 'deseleccionado';
+                } else if(el.type === 'radio') {
+                    value = el.checked ? 'seleccionado' : '';
+                }
+                
+                if(value) {
+                    srAnnounce(`${msg}: ${value}`, 'polite', true);
+                }
+            }
+        }
+    }, true);
+
+    // Anunciar cuando se carga nueva página o se cambia de sección
+    window.addEventListener('popstate', announceSectionOnNavigation);
+
+    // Anunciar secciones cuando se cargan dinámicamente (para SPA)
+    const observer = new MutationObserver((mutations) => {
+        if(!srEnabled) return;
+        
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if(node.nodeType === 1) { // Element node
+                    if(node.tagName === 'SECTION' || node.getAttribute('role') === 'region') {
+                        const title = getElementDescription(node);
+                        if(title) {
+                            setTimeout(() => {
+                                srAnnounce(`Nueva sección: ${title}`, 'polite', true);
+                            }, 300);
+                        }
+                    }
+                }
+            });
+        });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Anunciar encabezados cuando están visibles (para contenido largo)
+    const headingObserver = new IntersectionObserver((entries) => {
+        if(!srEnabled) return;
+        
+        entries.forEach(entry => {
+            if(entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                const heading = entry.target;
+                const text = getElementDescription(heading);
+                if(text && heading.tagName.match(/^H[1-6]$/)) {
+                    // Evitar anunciar el mismo encabezado repetidamente
+                    if(heading.getAttribute('data-sr-announced') !== 'true') {
+                        heading.setAttribute('data-sr-announced', 'true');
+                        srAnnounce(`Encabezado: ${text}`, 'polite', false);
+                    }
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    // Observar todos los encabezados
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+        headingObserver.observe(heading);
+    });
+    
+    // Anunciar la página actual al cargar
+    setTimeout(() => {
+        if(srEnabled) {
+            announceSectionOnNavigation();
+        }
+    }, 1000);
+});
+</script>
+</body>
+</html>
