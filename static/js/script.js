@@ -158,12 +158,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if(srToggle) srToggle.addEventListener('click', toggleSR);
     if(srToggleMenu) srToggleMenu.addEventListener('click', toggleSR);
+
+    // Inicializar contador al cargar
+    updateCartCount();
 });
 
 // ===== Funciones de carrito =====
+let cart = JSON.parse(localStorage.getItem('cart')) || {};
+
+function addToCart(productId, quantity) {
+    if(cart[productId]){
+        cart[productId] += quantity;
+    } else {
+        cart[productId] = quantity;
+    }
+
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+    showNotification("Producto agregado al carrito", "success");
+}
+
+function updateCartCount() {
+    const cartCount = document.getElementById('cart-count');
+    if(cartCount){
+        const totalItems = Object.values(cart).reduce((a,b) => a+b, 0);
+        cartCount.textContent = totalItems;
+    }
+}
+
+function showNotification(message, type="info") {
+    // Simple alert, puedes reemplazar con notificación más bonita
+    alert(message);
+}
+
 function initCartFunctionality(){ /* ... tu código de carrito aquí ... */ }
 function removeItemFromCart(productId){ /* ... tu código de eliminar aquí ... */ }
 function updateQuantity(productId, quantity, quantityElement){ /* ... */ }
-function addToCart(productId, quantity){ /* ... */ }
-function showNotification(message,type){ /* ... */ }
-function updateCartCount(change=0){ /* ... */ }
