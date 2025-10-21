@@ -671,6 +671,41 @@ if(grayscaleRange){
 }
 
 });
+
+// ===== INICIO: Carrito con efecto BUMP y anuncio lector =====
+document.addEventListener('DOMContentLoaded', () => {
+    const cartCount = document.querySelector('.cart-count');
+
+    // Función que hace el efecto bump
+    function bumpCart() {
+        if (!cartCount) return;
+        cartCount.classList.add('bump');
+        setTimeout(() => cartCount.classList.remove('bump'), 200);
+    }
+
+    // Añadir listener a todos los botones "Agregar al carrito"
+    document.querySelectorAll('.add-to-cart, .btn-add').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!cartCount) return;
+
+            // Incrementar contador
+            let count = parseInt(cartCount.textContent) || 0;
+            count += 1;
+            cartCount.textContent = count;
+
+            // Animación bump
+            bumpCart();
+
+            // Anuncio lector de pantalla
+            if (window.srEnabled) {
+                const productName = btn.closest('.product-card')?.querySelector('h3')?.textContent || 'Producto';
+                if (typeof srAnnounce === 'function') {
+                    srAnnounce(`${productName} agregado al carrito. Total: ${count} productos.`, 'polite', true);
+                }
+            }
+        });
+    });
+});
 </script>
 </body>
 </html>
