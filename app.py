@@ -23,7 +23,7 @@ from flask_dance.consumer import oauth_authorized, oauth_error
 # Importar configuración desde config.py
 from config import Config
 
-app = Flask(_name_)
+app = Flask(__name__)
 app.config.from_object(Config)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['VIDEO_UPLOAD_FOLDER'] = 'static/videos'  # Nueva carpeta específica para videos
@@ -1109,5 +1109,5 @@ def guide():
     # puedes pasar más contexto si necesitas
     return render_template('guide.html', title=guide_title)
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(port=5001, debug=True)
