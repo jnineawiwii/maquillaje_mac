@@ -13,11 +13,17 @@ import requests
 import base64
 import json
 import os
+# Añade estas importaciones con las demás
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.contrib.facebook import make_facebook_blueprint, facebook
+from flask_dance.contrib.github import make_github_blueprint, github
+from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
+from flask_dance.consumer import oauth_authorized, oauth_error
 
 # Importar configuración desde config.py
 from config import Config
 
-app = Flask(__name__)
+app = Flask(_name_)
 app.config.from_object(Config)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['VIDEO_UPLOAD_FOLDER'] = 'static/videos'  # Nueva carpeta específica para videos
@@ -40,6 +46,41 @@ def allowed_video_file(filename):  # Nueva función para videos
 # Configuración de Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
+# Configuración de OAuth para redes sociales - DESPUÉS de login_manager.init_app(app)
+
+# Blueprint para Google
+google_bp = make_google_blueprint(
+    client_id=os.environ.get("GOOGLE_CLIENT_ID", "dummy"),
+    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", "dummy"),
+    scope=["profile", "email"],
+    redirect_to="auth_result"
+)
+app.register_blueprint(google_bp, url_prefix="/auth")
+
+#
+# CONFIGURACIÓN FACEBOOK
+#
+facebook_bp = make_facebook_blueprint(
+    client_id=os.environ.get("FACEBOOK_CLIENT_ID", "dummy"),
+    client_secret=os.environ.get("FACEBOOK_CLIENT_SECRET", "dummy"),
+    scope="email",  # Agregar scope necesario
+    redirect_to="facebook_callback"
+)
+
+app.register_blueprint(facebook_bp, url_prefix="/facebook_login")
+
+# Blueprint para GitHub
+github_bp = make_github_blueprint(
+    client_id=os.environ.get("GITHUB_CLIENT_ID", "dummy"),
+    client_secret=os.environ.get("GITHUB_CLIENT_SECRET", "dummy"),
+    scope="user:email",
+    redirect_to="auth_result"
+)
+app.register_blueprint(github_bp, url_prefix="/auth")
+
+
 login_manager.login_view = 'login'
 
 db.init_app(app)
@@ -112,7 +153,8 @@ def search():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Rutas de autenticación
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -128,7 +170,8 @@ def login():
         else:
             flash('Usuario o contraseña incorrectos', 'danger')
     
-    return render_template('login.html', next=request.args.get('next', ''))
+    # ESTA LÍNEA DEBE ESTAR AL FINAL Y FUERA DEL IF
+    return render_template('login.html', next=request.args.get('next', ''), social_login=True)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -976,6 +1019,86 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
+
+
+# Ruta para manejar resultado de autenticación social
+@app.route('/auth-result')
+def auth_result():
+    if current_user.is_authenticated:
+        flash('¡Inicio de sesión con red social exitoso!', 'success')
+        return redirect(url_for('index'))
+    else:
+        flash('Error en la autenticación social. Intenta con otro método.', 'danger')
+        return redirect(url_for('login'))
+
+
+
+
+@app.route("/facebook/callback")
+def facebook_callback():
+    if not facebook.authorized:
+        return redirect(url_for("facebook.login"))
+
+    # Pedir datos del usuario
+    resp = facebook.get("/me?fields=id,name,email")
+    info = resp.json()
+
+    email = info.get("email")
+    if not email:
+        flash("Facebook no proporcionó un correo electrónico.", "danger")
+        return redirect(url_for("login"))
+
+    # Verificar si el usuario ya existe
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        user = User(
+            username=info.get("name"),
+            email=email,
+            role="customer"
+        )
+        user.set_password("oauth_temp")  # contraseña temporal
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+    flash("¡Inicio de sesión con Facebook exitoso!", "success")
+    return redirect(url_for("index"))
+
+
+
+
+
+
+
+
+
+@app.route('/data-deletion')
+def data_deletion():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Eliminación de Datos - Maquillaje MAC</title>
+        <style>
+            body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+            .container { background: #f9f9f9; padding: 30px; border-radius: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🗑️ Eliminación de Datos</h1>
+            <p>Para solicitar la eliminación de tus datos personales, contáctanos:</p>
+            <p><strong>Email:</strong> esmeraldachalira@gmail.com</p>
+            <p><strong>Asunto:</strong> "Solicitud de Eliminación de Datos"</p>
+            <p>Procesaremos tu solicitud dentro de los 30 días siguientes.</p>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
 @app.route('/guide')
 def guide():
     """
@@ -986,5 +1109,5 @@ def guide():
     # puedes pasar más contexto si necesitas
     return render_template('guide.html', title=guide_title)
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     app.run(port=5001, debug=True)

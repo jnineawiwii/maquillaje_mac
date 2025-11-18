@@ -28,6 +28,32 @@
             
             <button type="submit" class="btn-primary">Iniciar Sesión</button>
         </form>
+
+           
+
+        <!-- === BOTONES SOCIALES SOLO REALES === -->
+        <div class="social-login-section" style="margin-top: 30px; padding-top: 25px; border-top: 2px solid #eee;">
+            <h4 style="text-align: center; color: #555; margin-bottom: 20px;">O inicia sesión con</h4>
+            
+            <div class="social-buttons" style="display: flex; flex-direction: column; gap: 12px; margin: 20px 0;">
+                <a href="{{ url_for('google.login') }}" class="social-btn" style="background: #db4437; color: white; text-decoration: none; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold;">
+                    🔵 Continuar con Google
+                </a>
+                
+               <a href="{{ url_for('facebook.login') }}" class="btn btn-primary w-100 mt-2">
+    Continuar con Facebook
+</a>
+
+                
+                <a href="{{ url_for('github.login') }}" class="social-btn" style="background: #333; color: white; text-decoration: none; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold;">
+                    🐙 Continuar con GitHub
+                </a>
+            </div>
+        </div>
+
+
+
+        
         
         <p>¿No tienes cuenta? <a href="{{ url_for('register') }}?next={{ request.args.get('next', '') }}">Regístrate aquí</a></p>
     </div>

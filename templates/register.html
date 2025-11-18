@@ -13,7 +13,8 @@
             {% endif %}
         {% endwith %}
         
-        <form method="POST">
+        <!-- FORMULARIO CORREGIDO CON ACTION DE NGROK -->
+        <form method="POST" action="https://kaye-microptic-georgina.ngrok-free.dev/registrar">
             <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
             
             <div class="form-group">
@@ -33,8 +34,31 @@
             
             <button type="submit" class="btn-primary">Registrarse</button>
         </form>
-        
-        <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}?next={{ request.args.get('next', '') }}">Inicia sesión aquí</a></p>
+
+        <!-- === BOTONES SOCIALES === -->
+        <div class="social-login-section" style="margin-top: 30px; padding-top: 25px; border-top: 2px solid #eee;">
+            <h4 style="text-align: center; color: #555; margin-bottom: 20px;">O regístrate con</h4>
+            
+            <div class="social-buttons" style="display: flex; flex-direction: column; gap: 12px; margin: 20px 0;">
+                <a href="{{ url_for('google.login') }}" class="social-btn" style="background: #db4437; color: white; text-decoration: none; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold;">
+                    🔵 Continuar con Google
+                </a>
+                
+                <a href="{{ url_for('facebook.login') }}" class="social-btn" style="background: #1877f2; color: white; text-decoration: none; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold;">
+                    🇫 Continuar con Facebook
+                </a>
+                
+                <a href="{{ url_for('github.login') }}" class="social-btn" style="background: #333; color: white; text-decoration: none; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold;">
+                    🐙 Continuar con GitHub
+                </a>
+            </div>
+        </div>
+
+        <p>¿Ya tienes cuenta? 
+            <a href="{{ url_for('login') }}?next={{ request.args.get('next', '') }}">
+                Inicia sesión aquí
+            </a>
+        </p>
     </div>
 </div>
 {% endblock %}
